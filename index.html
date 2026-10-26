@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Game Mancing</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.0/nipplejs.min.js"></script>
+</head>
+<body>
+  
+  <canvas id="layar-game"></canvas>
+  <div id="area-analog"></div>
+  
+  <!-- Minimap Gaya GTA di Kanan Atas -->
+  <canvas id="minimap"></canvas>
+  
+  <button id="tombol-profil">👤 PROFIL</button>
+  <button id="tombol-tas">🎒 TAS</button>
+  <button id="tombol-aksi">AKSI</button>
+
+  <div id="wadah-bar" style="display: none;"><div id="isi-bar"></div></div>
+
+  <!-- Panel Profil -->
+  <div id="panel-profil" class="panel-popup" style="display: none;">
+    <h3>Profil Pemain</h3>
+    <p>⭐ Level: 1 | 💰 Uang: <span id="uang-profil">0</span></p>
+    <hr>
+    <p class="info-stat">🎣 Joran: <b id="info-joran"></b></p>
+    <p class="info-stat">🪱 Umpan: <b id="info-umpan"></b></p>
+    <p class="info-stat">🧪 Potion: <b id="info-potion">Tidak Ada</b></p>
+    <p>🏆 Total Ikan: <span id="total-tangkapan">0</span></p>
+    <button class="tutup-panel" id="tutup-profil">Tutup</button>
+  </div>
+
+  <!-- Panel Tas -->
+  <div id="panel-tas" class="panel-popup" style="display: none;">
+    <div class="tab-menu">
+      <button id="btn-tab-ikan" class="tab-aktif">Ikan</button>
+      <button id="btn-tab-joran">Joran</button>
+      <button id="btn-tab-umpan">Umpan</button>
+      <button id="btn-tab-potion">Potion</button>
+    </div>
+    <div id="konten-tas"><ul id="daftar-item"></ul></div>
+    <button class="tutup-panel" id="tutup-tas">Tutup</button>
+  </div>
+
+  <!-- Panel Toko -->
+  <div id="panel-toko" class="panel-popup" style="display: none;">
+    <h3>🏪 Toko Nelayan</h3>
+    <p>💰 Uangmu: <span id="uang-toko">0</span></p>
+    <button id="btn-jual-semua" style="background:#4caf50; color:white; padding:8px; width:100%; border-radius:5px; margin-bottom:10px;">Jual Semua Ikan</button>
+    <div class="tab-menu">
+      <button id="btn-toko-joran" class="tab-aktif">Joran</button>
+      <button id="btn-toko-umpan">Umpan</button>
+      <button id="btn-toko-potion">Potion</button>
+    </div>
+    <div id="konten-toko"><ul id="daftar-toko"></ul></div>
+    <button class="tutup-panel" id="tutup-toko">Keluar</button>
+  </div>
+  
+  <script src="main.js"></script>
+</body>
+</html>
