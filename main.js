@@ -282,3 +282,189 @@ const tabsToko = ["joran", "umpan", "potion"];
 tabsToko.forEach(id => document.getElementById("btn-toko-" + id).addEventListener("click", (e) => {
     tabsToko.forEach(t => document.getElementById("btn-toko-" + t).classList.remove("tab-aktif")); e.target.classList.add("tab-aktif"); renderToko(id);
 }));
+// ==========================================
+// SISTEM PENYIMPANAN TELEGRAM CLOUD STORAGE
+// ==========================================
+
+// Fungsi untuk Menyimpan Data Game
+function simpanGameKeTelegram() {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage) {
+        // Bungkus semua data penting ke dalam objek
+        const dataGame = {
+            uangPemain: uangPemain,
+            tasIkan: tasIkan,
+            tasPotion: tasPotion,
+            tasJoran: tasJoran,
+            tasUmpan: tasUmpan,
+            joranAktifId: joranAktif.id,
+            umpanAktifId: umpanAktif.id
+        };
+
+        // Simpan ke Cloud Storage Telegram (menggunakan key "save_data_game")
+        Telegram.TelegramWebApp?.CloudStorage?.setItem("save_data_game", JSON.stringify(dataGame), (err, success) => {
+            if (success) {
+                console.log("Progress game berhasil disimpan ke Cloud Telegram!");
+            } else if (err) {
+                console.log("Gagal menyimpan ke Cloud Telegram:", err);
+            }
+        });
+    } else {
+        // Cadangan jika dibuka di browser biasa (menggunakan localStorage)
+        const dataGame = { uangPemain, tasIkan, tasPotion, tasJoran, tasUmpan, joranAktifId: joranAktif.id, umpanAktifId: umpanAktif.id };
+        localStorage.setItem("save_data_game_local", JSON.stringify(dataGame));
+    }
+}
+
+// Fungsi untuk Memuat/Load Data Game saat pertama kali dibuka
+function muatGameDariTelegram() {
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage) {
+        Telegram.WebApp.CloudStorage.getItem("save_data_game", (err, value) => {
+            if (!err && value) {
+                try {
+                    const dataGame = JSON.parse(value);
+                    terapkanDataGame(dataGame);
+                    console.log("Progress game berhasil dimuat dari Cloud Telegram!");
+                } catch (e) {
+                    console.log("Gagal memparsing data save:", e);
+                }
+            } else {
+                console.log("Belum ada data save di Telegram, menggunakan data baru.");
+            }
+        });
+    } else {
+        // Cadangan untuk browser biasa
+        let savedLocal = localStorage.getItem("save_data_game_local");
+        if (savedLocal) {
+            try {
+                const dataGame = JSON.parse(savedLocal);
+                terapkanDataGame(dataGame);
+            } catch (e) {}
+        }
+    }
+}
+
+// Helper untuk memasukkan data yang dimuat ke variabel game
+function terapkanDataGame(data) {
+    if (data.uangPemain !== undefined) uangPemain = data.uangPemain;
+    if (data.tasIkan) tasIkan = data.tasIkan;
+    if (data.tasPotion) tasPotion = data.tasPotion;
+    if (data.tasJoran) tasJoran = data.tasJoran;
+    if (data.tasUmpan) tasUmpan = data.tasUmpan;
+    
+    // Sinkronkan objek joran & umpan aktif berdasarkan ID yang disimpan
+    if (data.joranAktifId) {
+        let foundJoran = tasJoran.find(j => j.id === data.joranAktifId);
+        if (foundJoran) joranAktif = foundJoran;
+    }
+    if (data.umpanAktifId) {
+        let foundUmpan = tasUmpan.find(u => u.id === data.umpanAktifId);
+        if (foundUmpan) umpanAktif = foundUmpan;
+    }
+    
+    updateTeksUI(); // Perbarui tampilan UI setelah data dimuat
+}
+
+// 1. Panggil fungsi load saat game pertama kali dijalankan/di-refresh
+window.addEventListener("DOMContentLoaded", () => {
+    muatGameDirequest = setTimeout(muatGameDariTelegram, 500);
+});
+
+// 2. Otomatis simpan data saat pemain melakukan aksi penting (Contoh: Menjual ikan, Beli item, atau Ganti alat)
+// Kamu bisa menyisipkan fungsi `simpanGameKeTelegram()` di event berikut:
+
+document.getElementById("btn-jual-semua").addEventListener("click", () => {
+    // ... kode asli jual semua ...
+    simpanGameKeTelegram(); // <-- Tambahkan ini agar tersimpan saat jual ikan
+});
+// ==========================================
+// SISTEM PENYIMPANAN GABUNGAN (TELEGRAM CLOUD & DEVICE LOCALSTORAGE)
+// ==========================================
+
+function simpanGame() {
+    // 1. Bungkus semua data penting ke dalam objek
+    const dataGame = {
+        uangPemain: uangPemain,
+        tasIkan: tasIkan,
+        tasPotion: tasPotion,
+        tasJoran: tasJoran,
+        tasUmpan: tasUmpan,
+        joranAktifId: joranAktif.id,
+        umpanAktifId: umpanAktif.id
+    };
+
+    const jsonString = JSON.stringify(dataGame);
+
+    // 2. Simpan ke Device (Local Storage) - Pasti tersimpan di HP/PC
+    try {
+        localStorage.setItem("save_data_game_device", jsonString);
+        console.log("Progress berhasil disimpan ke perangkat (Device)!");
+    } catch (e) {
+        console.log("Gagal menyimpan ke device:", e);
+    }
+
+    // 3. Simpan ke Telegram Cloud Storage (Jika dibuka di dalam Telegram)
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage) {
+        Telegram.WebApp.CloudStorage.setItem("save_data_game", jsonString, (err, success) => {
+            if (success) {
+                console.log("Progress berhasil disinkronkan ke Cloud Telegram!");
+            }
+        });
+    }
+}
+
+// Fungsi untuk Memuat Data (Prioritaskan Telegram Cloud, jika kosong ambil dari Device)
+function muatGame() {
+    const terapkanData = (jsonString) => {
+        try {
+            const dataGame = JSON.parse(jsonString);
+            if (dataGame.uangPemain !== undefined) uangPemain = dataGame.uangPemain;
+            if (dataGame.tasIkan) tasIkan = dataGame.tasIkan;
+            if (dataGame.tasPotion) tasPotion = dataGame.tasPotion;
+            if (dataGame.tasJoran) tasJoran = dataGame.tasJoran;
+            if (dataGame.tasUmpan) tasUmpan = dataGame.tasUmpan;
+            
+            if (dataGame.joranAktifId) {
+                let foundJoran = tasJoran.find(j => j.id === dataGame.joranAktifId);
+                if (foundJoran) joranAktif = foundJoran;
+            }
+            if (dataGame.umpanAktifId) {
+                let foundUmpan = tasUmpan.find(u => u.id === dataGame.umpanAktifId);
+                if (foundUmpan) umpanAktif = foundUmpan;
+            }
+            updateTeksUI();
+            console.log("Data game berhasil dimuat!");
+        } catch (e) {
+            console.log("Gagal memparsing data save:", e);
+        }
+    };
+
+    // Coba muat dari Telegram Cloud terlebih dahulu
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.CloudStorage) {
+        Telegram.WebApp.CloudStorage.getItem("save_data_game", (err, value) => {
+            if (!err && value) {
+                terapkanData(value);
+            } else {
+                // Jika di Telegram kosong, fallback ambil dari Device
+                muatDariDevice(terapkanData);
+            }
+        });
+    } else {
+        // Jika bukan di Telegram (buka langsung di browser), ambil dari Device
+        muatDariDevice(terapkanData);
+    }
+}
+
+function muatDariDevice(callback) {
+    let savedLocal = localStorage.getItem("save_data_game_device");
+    if (savedLocal) {
+        callback(savedLocal);
+        console.log("Data dimuat dari memori perangkat (Device).");
+    } else {
+        console.log("Belum ada data save di perangkat.");
+    }
+}
+
+// Panggil fungsi muat data saat game pertama kali dijalankan
+window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(muatGame, 300);
+});
